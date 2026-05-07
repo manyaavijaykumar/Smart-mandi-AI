@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>🌾 MandiPredict Karnataka</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;700;900&family=Noto+Sans+Kannada:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --g:#1b5e3b;--gm:#2d7a52;--gl:#4caf82;
+  --y:#c89b14;--yl:#f5c842;--yp:#fdf6e3;
+  --r:#b91c1c;--rp:#fef2f2;--rm:#ef4444;
+  --bg:#f4f0e8;--card:#fff;--bd:#ddd6c8;
+  --tx:#1a1a12;--mu:#7a7060;--pl:#ede8de;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:272px;flex-shrink:0;background:var(--g);padding:1.4rem 1.2rem;position:sticky;top:0;height:100vh;overflow-y:auto;z-index:20}
+.main{flex:1;padding:1.6rem 2rem;overflow-x:hidden}
+.brand-name{font-family:'Fraunces',serif;font-size:1.75rem;font-weight:900;color:#fff}
+.brand-name span{color:var(--yl)}
+.brand-sub{font-size:.62rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-top:.2rem;display:block;padding-bottom:.9rem;border-bottom:1px solid rgba(255,255,255,.12);margin-bottom:.9rem}
+.lang-row{display:flex;gap:6px;margin-bottom:1rem}
+.lang-btn{flex:1;padding:.38rem;border:1.5px solid rgba(255,255,255,.2);background:transparent;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;color:rgba(255,255,255,.65);transition:all .2s}
+.lang-btn.active{background:var(--yl);color:var(--g);border-color:var(--yl)}
+.form-group{margin-bottom:.85rem}
+.form-label{font-size:.6rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:5px;display:block}
+.form-select{width:100%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:9px;padding:.5rem .75rem;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;color:#fff;outline:none;cursor:pointer}
+.form-select option{background:#1b5e3b;color:#fff}
+.form-select:focus{border-color:var(--yl)}
+input[type=range]{-webkit-appearance:none;width:100%;height:5px;background:rgba(255,255,255,.2);border-radius:3px;outline:none;margin-top:6px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--yl);cursor:pointer;border:2px solid var(--g)}
+.slider-val{font-size:.78rem;font-weight:700;color:rgba(255,255,255,.75);margin-top:4px}
+.btn-predict{width:100%;background:linear-gradient(135deg,var(--y),var(--yl));color:var(--g);border:none;border-radius:11px;padding:.82rem;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:800;cursor:pointer;margin-top:.5rem;transition:opacity .2s}
+.btn-predict:hover{opacity:.88}
+.btn-predict:disabled{opacity:.45;cursor:not-allowed}
+.api-status{margin-top:.9rem;padding:.65rem .75rem;border-radius:10px;background:rgba(0,0,0,.2);font-size:.7rem;color:rgba(255,255,255,.65);line-height:2}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.dot-live{background:#4ade80}.dot-mock{background:var(--yl)}.dot-err{background:#f87171}
+.hero{background:linear-gradient(135deg,#0f3d24,#1b5e3b 55%,#2d7a52);border-radius:18px;padding:2rem 2.4rem;margin-bottom:1.4rem;position:relative;overflow:hidden}
+.hero::before{content:'🌾';position:absolute;right:1.5rem;bottom:-1.5rem;font-size:9rem;opacity:.07;transform:rotate(-10deg);user-select:none}
+.hero-eye{font-size:.68rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--yl);margin-bottom:.35rem}
+.hero-title{font-family:'Fraunces',serif;font-size:2.1rem;font-weight:900;color:#fff;line-height:1.15;margin-bottom:.35rem}
+.hero-title em{color:var(--yl);font-style:normal}
+.hero-sub{color:rgba(255,255,255,.6);font-size:.85rem;margin-bottom:.8rem}
+.badge{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.85);font-size:.68rem;font-weight:600;padding:3px 10px;border-radius:20px;margin-right:5px}
+.badge-live{background:rgba(74,222,128,.2);border-color:rgba(74,222,128,.4)}
+.badge-mock{background:rgba(245,200,66,.18);border-color:rgba(245,200,66,.35)}
+.metrics-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.9rem;margin-bottom:1.3rem}
+.metric-card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:1rem 1.1rem;position:relative;overflow:hidden}
+.mac{position:absolute;left:0;top:0;width:4px;height:100%;border-radius:4px 0 0 4px}
+.ag{background:var(--gm)}.ay{background:var(--y)}.ad{background:#0f3d24}.ar{background:var(--rm)}
+.metric-icon{font-size:1.3rem;margin-bottom:.22rem;display:block}
+.metric-label{color:var(--mu);font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.15rem}
+.metric-value{font-family:'Fraunces',serif;font-size:1.55rem;font-weight:700;line-height:1.1;margin-bottom:.15rem}
+.up{color:var(--gm);font-size:.75rem;font-weight:600}
+.dn{color:var(--r);font-size:.75rem;font-weight:600}
+.signal-card{border-radius:16px;padding:1.5rem 1.8rem;margin-bottom:1.3rem;border:2px solid}
+.sig-hold{background:#fffbeb;border-color:var(--y)}
+.sig-sell{background:#f0fdf4;border-color:var(--gl)}
+.sig-wait{background:var(--rp);border-color:#fca5a5}
+.sig-hdr{display:flex;align-items:center;gap:1rem;margin-bottom:.8rem}
+.sig-emoji{font-size:2rem}
+.sig-title{font-family:'Fraunces',serif;font-size:1.6rem;font-weight:900}
+.sig-conf{font-size:.78rem;color:var(--mu);margin-top:.1rem}
+.sig-bullets{list-style:none;display:flex;flex-direction:column;gap:.4rem;margin-top:.5rem}
+.sig-bullets li{font-size:.84rem;display:flex;gap:.5rem;align-items:flex-start;line-height:1.45}
+.sig-bullets li::before{content:'→';font-weight:700;flex-shrink:0;margin-top:1px}
+.sig-hold .sig-bullets li::before{color:var(--y)}
+.sig-sell .sig-bullets li::before{color:var(--gm)}
+.sig-wait .sig-bullets li::before{color:var(--r)}
+.wx-card{background:linear-gradient(135deg,#1565c0,#1976d2,#0288d1);border-radius:16px;padding:1.4rem 1.8rem;margin-bottom:1.3rem;color:#fff}
+.wx-title{font-family:'Fraunces',serif;font-size:1.2rem;font-weight:800;margin-bottom:.9rem}
+.wx-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;margin-bottom:.9rem}
+.wd{background:rgba(255,255,255,.15);border-radius:10px;padding:.55rem .3rem;text-align:center}
+.wd-label{font-size:.58rem;font-weight:700;text-transform:uppercase;opacity:.75;margin-bottom:.12rem}
+.wd-icon{font-size:1.3rem;margin-bottom:.12rem}
+.wd-temp{font-size:.8rem;font-weight:700}
+.wd-humid{font-size:.54rem;opacity:.65;margin-top:.05rem}
+.wd-rain{font-size:.54rem;opacity:.7}
+.crop-adv{background:rgba(255,255,255,.18);border-radius:12px;padding:.9rem 1.1rem}
+.crop-adv-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.55rem;opacity:.9}
+.crop-adv-list{list-style:none;display:flex;flex-direction:column;gap:.32rem}
+.crop-adv-list li{font-size:.82rem;display:flex;gap:.45rem;align-items:flex-start;opacity:.95;line-height:1.4}
+.crop-adv-list li::before{content:'🌿';flex-shrink:0}
+.sec-hdr{margin-bottom:.9rem}
+.sec-eye{font-size:.65rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gm);margin-bottom:.1rem}
+.sec-title{font-family:'Fraunces',serif;font-size:1.3rem;font-weight:800}
+.fc-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:.55rem;margin-bottom:1.3rem}
+.fc-card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:.75rem .45rem;text-align:center}
+.fc-card.peak{border-color:var(--y);background:var(--yp)}
+.fc-day{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:.22rem}
+.fc-price{font-family:'Fraunces',serif;font-size:.98rem;font-weight:700;margin-bottom:.15rem}
+.fc-chg{font-size:.65rem;font-weight:600}
+.chart-wrap{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:1.2rem 1.4rem;margin-bottom:1.3rem}
+.chart-box{position:relative;height:260px}
+.mandi-wrap{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:1.2rem 1.4rem;margin-bottom:1.3rem}
+.mandi-table{width:100%;border-collapse:collapse}
+.mandi-table th{font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);padding:.45rem .7rem;border-bottom:2px solid var(--bd);text-align:left}
+.mandi-table td{padding:.55rem .7rem;border-bottom:1px solid var(--bd);font-size:.83rem}
+.mandi-table tr:last-child td{border-bottom:none}
+.mandi-table tr:hover td{background:var(--pl)}
+.badge-dist{display:inline-block;background:#e8f5ee;color:#1b5e3b;font-size:.66rem;font-weight:700;padding:2px 8px;border-radius:8px}
+.tag{font-size:.58rem;padding:1px 6px;border-radius:6px;font-weight:700;margin-left:5px}
+.tag-live{background:#dcfce7;color:#14532d}
+.tag-mock{background:#fef9c3;color:#713f12}
+.err-banner{background:var(--rp);border:1px solid #fca5a5;border-radius:12px;padding:.8rem 1.1rem;margin-bottom:1rem;font-size:.82rem;color:#7f1d1d}
+.ov{display:none;position:fixed;inset:0;background:rgba(244,240,232,.92);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:.9rem;backdrop-filter:blur(4px)}
+.ov.on{display:flex}
+.spinner{width:44px;height:44px;border:3px solid var(--bd);border-top-color:var(--gm);border-radius:50%;animation:spin .8s linear infinite}
+.step-list{font-size:.78rem;color:var(--mu);text-align:center;line-height:2.2}
+.step-list .act{color:var(--gm);font-weight:700}
+.step-list .don{color:var(--tx);font-weight:600}
+@keyframes spin{to{transform:rotate(360deg)}}
+.fade-in{animation:fi .5s ease}
+@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media(max-width:900px){.layout{flex-direction:column}.sidebar{width:100%;height:auto;position:relative}.metrics-row{grid-template-columns:repeat(2,1fr)}.fc-grid,.wx-grid{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+<div class="ov" id="ov">
+  <div class="spinner"></div>
+  <div style="font-weight:800;color:var(--g);font-size:.95rem" id="ovTitle">Fetching live data…</div>
+  <div class="step-list" id="stepList">
+    <div id="s1">📡 Connecting to Agmarknet…</div>
+    <div id="s2">🌦 Fetching weather data…</div>
+    <div id="s3">🧠 Running price analysis…</div>
+    <div id="s4">📊 Building forecast…</div>
+  </div>
+</div>
+
+<div class="layout">
+<aside class="sidebar">
+  <div class="brand-name">Mandi<span>Predict</span></div>
+  <span class="brand-sub" id="lbl-sub">Karnataka Crop Price Forecast</span>
+  <div class="lang-row">
+    <button class="lang-btn active" id="langEN" onclick="setLang('en')">English</button>
+    <button class="lang-btn" id="langKN" onclick="setLang('kn')">ಕನ್ನಡ</button>
+  </div>
+  <div class="form-group">
+    <label class="form-label" id="lbl-dist">District</label>
+    <select class="form-select" id="distSel"></select>
+  </div>
+  <div class="form-group">
+    <label class="form-label" id="lbl-crop">Crop</label>
+    <select class="form-select" id="cropSel"></select>
+  </div>
+  <div class="form-group">
+    <label class="form-label" id="lbl-tr">Transport Cost (₹/qt)</label>
+    <input type="range" id="trSlider" min="0" max="500" value="120" step="10"/>
+    <div class="slider-val">₹<span id="trVal">120</span>/qt</div>
+  </div>
+  <div class="form-group">
+    <label class="form-label" id="lbl-qty">Quantity (quintals)</label>
+    <input type="range" id="qtySlider" min="1" max="200" value="20" step="1"/>
+    <div class="slider-val"><span id="qtyVal">20</span> qt</div>
+  </div>
+  <button class="btn-predict" id="predictBtn" onclick="run()">
+    <span id="lbl-btn">🔍 Predict Price</span>
+  </button>
+  <div class="api-status" id="apiStat">
+    <div><span class="dot dot-mock"></span>Agmarknet: <strong>Connecting…</strong></div>
+    <div><span class="dot dot-mock"></span>Weather: <strong>Connecting…</strong></div>
+  </div>
+</aside>
+
+<main class="main" id="mainContent">
+  <div class="hero">
+    <div class="hero-eye" id="heroEye">KARNATAKA MANDI INTELLIGENCE</div>
+    <h1 class="hero-title" id="heroTitle">Select a <em>crop &amp; district</em><br>to begin</h1>
+    <p class="hero-sub" id="heroSub">Real-time price prediction for Karnataka farmers</p>
+    <span class="badge" id="clockBadge"></span>
+    <span class="badge badge-mock" id="dataBadge">Initializing…</span>
+  </div>
+  <div id="errBanner"></div>
+  <div class="metrics-row" id="metricsRow" style="display:none"></div>
+  <div id="sigSec"></div>
+  <div id="wxSec"></div>
+  <div id="fcSec" style="display:none">
+    <div class="sec-hdr">
+      <div class="sec-eye" id="lbl-fce">7-DAY FORECAST</div>
+      <div class="sec-title" id="lbl-fct">Price Prediction</div>
+    </div>
+    <div class="fc-grid" id="fcGrid"></div>
+  </div>
+  <div class="chart-wrap" id="chartWrap" style="display:none">
+    <div class="sec-hdr">
+      <div class="sec-eye" id="lbl-che">HISTORICAL + FORECAST</div>
+      <div class="sec-title" id="lbl-cht">Price Trend</div>
+    </div>
+    <div class="chart-box"><canvas id="priceChart"></canvas></div>
+  </div>
+  <div class="mandi-wrap" id="mandiWrap" style="display:none">
+    <div class="sec-hdr">
+      <div class="sec-eye" id="lbl-me">NEARBY MARKETS</div>
+      <div class="sec-title" id="lbl-mt">Mandi Price Comparison</div>
+    </div>
+    <table class="mandi-table" id="mandiTable"></table>
+  </div>
+</main>
+</div>
+
+<script>
+// ╔══════════════════════════════════════╗
+// ║  PASTE YOUR API KEYS HERE           ║
+// ╚══════════════════════════════════════╝
+const AG_KEY = "579b464db66ec23bdd000001cfa47e19ba5a432b588798e165a46dd9";       // data.gov.in API key
+const WX_KEY = "1586da3ef3a3b591fd5b9199348c2921";    // openweathermap.org API key
+
+// CORS proxy for data.gov.in (required for browser calls)
+// Option 1 (free, no signup): use corsproxy.io
+// Option 2: deploy your own proxy
+const CORS  = "https://corsproxy.io/?";
+const AG_RID = "9ef84268-d588-465a-a308-a864a43d0070";
+
+const HAS_AG = AG_KEY !== "579b464db66ec23bdd000001cfa47e19ba5a432b588798e165a46dd9" && AG_KEY.length > 8;
+const HAS_WX = WX_KEY !== "1586da3ef3a3b591fd5b9199348c2921" && WX_KEY.length > 8;
+
+// ── LANGUAGE ──────────────────────────────────────────
+const L = {
+  en:{sub:"Karnataka Crop Price Forecast",dist:"District",crop:"Crop",tr:"Transport Cost (₹/qt)",qty:"Quantity (quintals)",btn:"🔍 Predict Price",fce:"7-DAY FORECAST",fct:"Price Prediction",che:"HISTORICAL + FORECAST",cht:"Price Trend",me:"NEARBY MARKETS",mt:"Mandi Price Comparison",eye:"KARNATAKA MANDI INTELLIGENCE",sub2:"Real-time price prediction for Karnataka farmers",sell:"✅ SELL NOW",hold:"⏳ HOLD — Price Rising",wait:"⚠️ WAIT & WATCH",wxT:"🌦 7-Day Weather Forecast & Crop Advisory",wxA:"CROP PROTECTION ADVICE",mP:"TODAY'S PRICE",mN:"NET PROFIT",mPk:"PEAK FORECAST",mC:"7D CHANGE",tM:"Market",tD:"District",tP:"Price (₹/qt)",tDi:"Distance",tS:"Status"},
+  kn:{sub:"ಕರ್ನಾಟಕ ಬೆಳೆ ಬೆಲೆ ಮುನ್ಸೂಚನೆ",dist:"ಜಿಲ್ಲೆ",crop:"ಬೆಳೆ",tr:"ಸಾಗಣೆ ವೆಚ್ಚ (₹/ಕ್ವಿ)",qty:"ಪ್ರಮಾಣ (ಕ್ವಿಂಟಾಲ್)",btn:"🔍 ಬೆಲೆ ಊಹಿಸಿ",fce:"7 ದಿನಗಳ ಮುನ್ಸೂಚನೆ",fct:"ಬೆಲೆ ಊಹೆ",che:"ಹಿಂದಿನ + ಮುನ್ಸೂಚನೆ",cht:"ಬೆಲೆ ಪ್ರವೃತ್ತಿ",me:"ಹತ್ತಿರದ ಮಾರುಕಟ್ಟೆಗಳು",mt:"ಮಂಡಿ ಬೆಲೆ ಹೋಲಿಕೆ",eye:"ಕರ್ನಾಟಕ ಮಂಡಿ ವಿಶ್ಲೇಷಣೆ",sub2:"ಕರ್ನಾಟಕ ರೈತರಿಗಾಗಿ ನೇರ ಬೆಲೆ ಮುನ್ಸೂಚನೆ",sell:"✅ ಈಗ ಮಾರಿ",hold:"⏳ ತಡೆಹಿಡಿಯಿರಿ",wait:"⚠️ ನಿರೀಕ್ಷಿಸಿ",wxT:"🌦 7 ದಿನಗಳ ಹವಾಮಾನ ಮತ್ತು ಬೆಳೆ ಸಲಹೆ",wxA:"ಬೆಳೆ ರಕ್ಷಣೆ ಸಲಹೆ",mP:"ಇಂದಿನ ಬೆಲೆ",mN:"ನಿವ್ವಳ ಲಾಭ",mPk:"ಗರಿಷ್ಠ ಮುನ್ಸೂಚನೆ",mC:"7 ದಿನ ಬದಲಾವಣೆ",tM:"ಮಾರುಕಟ್ಟೆ",tD:"ಜಿಲ್ಲೆ",tP:"ಬೆಲೆ (₹/ಕ್ವಿ)",tDi:"ದೂರ",tS:"ಸ್ಥಿತಿ"}
+};
+let lang='en';
+const t=k=>L[lang][k]||L.en[k];
+
+// ── DATA ──────────────────────────────────────────────
+const DISTRICTS=[
+  {en:"Bagalkot",kn:"ಬಾಗಲಕೋಟೆ",lat:16.18,lon:75.70},
+  {en:"Ballari",kn:"ಬಳ್ಳಾರಿ",lat:15.14,lon:76.92},
+  {en:"Belagavi",kn:"ಬೆಳಗಾವಿ",lat:15.85,lon:74.50},
+  {en:"Bengaluru Rural",kn:"ಬೆಂಗಳೂರು ಗ್ರಾಮಾಂತರ",lat:13.10,lon:77.58},
+  {en:"Bengaluru Urban",kn:"ಬೆಂಗಳೂರು ನಗರ",lat:12.97,lon:77.59},
+  {en:"Bidar",kn:"ಬೀದರ್",lat:17.91,lon:77.51},
+  {en:"Chamarajanagar",kn:"ಚಾಮರಾಜನಗರ",lat:11.92,lon:76.94},
+  {en:"Chikkaballapur",kn:"ಚಿಕ್ಕಬಳ್ಳಾಪುರ",lat:13.43,lon:77.72},
+  {en:"Chikkamagaluru",kn:"ಚಿಕ್ಕಮಗಳೂರು",lat:13.32,lon:75.78},
+  {en:"Chitradurga",kn:"ಚಿತ್ರದುರ್ಗ",lat:14.23,lon:76.40},
+  {en:"Dakshina Kannada",kn:"ದಕ್ಷಿಣ ಕನ್ನಡ",lat:12.87,lon:74.88},
+  {en:"Davanagere",kn:"ದಾವಣಗೆರೆ",lat:14.47,lon:75.92},
+  {en:"Dharwad",kn:"ಧಾರವಾಡ",lat:15.46,lon:75.01},
+  {en:"Gadag",kn:"ಗದಗ",lat:15.42,lon:75.62},
+  {en:"Hassan",kn:"ಹಾಸನ",lat:13.00,lon:76.10},
+  {en:"Haveri",kn:"ಹಾವೇರಿ",lat:14.79,lon:75.40},
+  {en:"Kalaburagi",kn:"ಕಲಬುರಗಿ",lat:17.33,lon:76.82},
+  {en:"Kodagu",kn:"ಕೊಡಗು",lat:12.42,lon:75.74},
+  {en:"Kolar",kn:"ಕೋಲಾರ",lat:13.14,lon:78.13},
+  {en:"Koppal",kn:"ಕೊಪ್ಪಳ",lat:15.35,lon:76.15},
+  {en:"Mandya",kn:"ಮಂಡ್ಯ",lat:12.52,lon:76.90},
+  {en:"Mysuru",kn:"ಮೈಸೂರು",lat:12.30,lon:76.65},
+  {en:"Raichur",kn:"ರಾಯಚೂರು",lat:16.20,lon:77.36},
+  {en:"Ramanagara",kn:"ರಾಮನಗರ",lat:12.72,lon:77.28},
+  {en:"Shivamogga",kn:"ಶಿವಮೊಗ್ಗ",lat:13.93,lon:75.57},
+  {en:"Tumakuru",kn:"ತುಮಕೂರು",lat:13.34,lon:77.10},
+  {en:"Udupi",kn:"ಉಡುಪಿ",lat:13.34,lon:74.75},
+  {en:"Uttara Kannada",kn:"ಉತ್ತರ ಕನ್ನಡ",lat:14.80,lon:74.13},
+  {en:"Vijayapura",kn:"ವಿಜಯಪುರ",lat:16.83,lon:75.72},
+  {en:"Yadgir",kn:"ಯಾದಗಿರಿ",lat:16.77,lon:77.14},
+  {en:"Vijayanagara",kn:"ವಿಜಯನಗರ",lat:15.14,lon:76.46}
+];
+
+const CROPS=[
+  {en:"Ragi (Finger Millet)",kn:"ರಾಗಿ",emoji:"🌾",base:1800,ag:"Ragi(Finger Millet)"},
+  {en:"Jowar (Sorghum)",kn:"ಜೋಳ",emoji:"🌽",base:2100,ag:"Jowar(Sorghum)"},
+  {en:"Tur Dal (Pigeon Pea)",kn:"ತೊಗರಿ",emoji:"🫘",base:6200,ag:"Tur Dal (Arhar Dal)"},
+  {en:"Groundnut",kn:"ಶೇಂಗಾ",emoji:"🥜",base:5400,ag:"Groundnut"},
+  {en:"Sugarcane",kn:"ಕಬ್ಬು",emoji:"🎋",base:3400,ag:"Sugarcane"},
+  {en:"Cotton",kn:"ಹತ್ತಿ",emoji:"🌿",base:6800,ag:"Cotton"},
+  {en:"Sunflower",kn:"ಸೂರ್ಯಕಾಂತಿ",emoji:"🌻",base:5800,ag:"Sunflower"},
+  {en:"Maize",kn:"ಮೆಕ್ಕೆಜೋಳ",emoji:"🌽",base:2000,ag:"Maize"},
+  {en:"Coffee (Arabica)",kn:"ಕಾಫಿ",emoji:"☕",base:42000,ag:"Coffee"},
+  {en:"Arecanut (Betel Nut)",kn:"ಅಡಿಕೆ",emoji:"🌴",base:48000,ag:"Arcanut (Betel Nut)"}
+];
+
+const DAY_EN=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const DAY_KN=['ಭಾನು','ಸೋಮ','ಮಂಗಳ','ಬುಧ','ಗುರು','ಶುಕ್ರ','ಶನಿ'];
+
+// ── AGMARKNET FETCH (via CORS proxy) ─────────────────
+async function fetchAG(crop, district) {
+  if (!HAS_AG) return null;
+  const c = CROPS.find(x=>x.en===crop);
+  const commodity = c?.ag || crop;
+
+  // Try without district filter first (broader search)
+  const buildUrl = (withDistrict) => {
+    let url = `https://api.data.gov.in/resource/${AG_RID}`
+      + `?api-key=${AG_KEY}&format=json`
+      + `&filters[state]=Karnataka`
+      + `&filters[commodity]=${encodeURIComponent(commodity)}`
+      + `&limit=500&sort[arrival_date]=desc`;
+    if (withDistrict) url += `&filters[district]=${encodeURIComponent(district)}`;
+    return url;
+  };
+
+  for (const withDist of [true, false]) {
+    try {
+      const target = buildUrl(withDist);
+      const res = await fetch(CORS + encodeURIComponent(target), {
+        signal: AbortSignal.timeout(12000),
+        headers: {'x-requested-with': 'XMLHttpRequest'}
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      if (!json.records?.length) continue;
+
+      const records = json.records
+        .map(r => ({
+          date: r.arrival_date || r.date || '',
+          price: parseFloat(r.modal_price || r.min_price || r.max_price || 0),
+          market: r.market || r.apmc || district + ' APMC',
+          district: r.district || district
+        }))
+        .filter(r => r.price > 0 && r.date)
+        .sort((a,b) => new Date(a.date) - new Date(b.date));
+
+      if (records.length < 3) continue;
+
+      console.log(`✅ Agmarknet: ${records.length} records (district filter: ${withDist})`);
+      return records.slice(-30).map(r => ({
+        date: new Date(r.date).toISOString().split('T')[0],
+        price: Math.round(r.price),
+        market: r.market,
+        district: r.district
+      }));
+    } catch(e) {
+      console.warn(`Agmarknet (withDistrict=${withDist}):`, e.message);
+    }
+  }
+  return null;
+}
+
+// ── OPENWEATHERMAP FETCH ──────────────────────────────
+async function fetchWX(district) {
+  if (!HAS_WX) return null;
+  const d = DISTRICTS.find(x=>x.en===district);
+  if (!d) return null;
+  // OpenWeatherMap supports CORS natively — no proxy needed
+  const url = `https://api.openweathermap.org/data/2.5/forecast`
+    + `?lat=${d.lat}&lon=${d.lon}&appid=${WX_KEY}&units=metric&cnt=56`;
+  try {
+    const res = await fetch(url, {signal: AbortSignal.timeout(8000)});
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    const byDay = {};
+    json.list.forEach(item => {
+      const date = item.dt_txt.split(' ')[0];
+      const hour = parseInt(item.dt_txt.split(' ')[1]);
+      if (!byDay[date] || Math.abs(hour-12) < Math.abs(byDay[date].hour-12)) {
+        byDay[date] = {
+          hour, temp: Math.round(item.main.temp),
+          humidity: item.main.humidity,
+          desc: item.weather[0].main,
+          descFull: item.weather[0].description,
+          rainMm: (item.rain?.['3h'] || 0) * 8, // 3hr → daily estimate
+          wind: Math.round(item.wind.speed)
+        };
+      }
+    });
+    const days = Object.entries(byDay).slice(0,7).map(([date,d]) => {
+      const dt = new Date(date);
+      const isRain = d.rainMm > 0 || ['Rain','Thunderstorm','Drizzle'].includes(d.desc);
+      return {
+        date, label: DAY_EN[dt.getDay()], labelKn: DAY_KN[dt.getDay()],
+        icon: wxEmoji(d.desc), descEn: d.descFull, descKn: wxKn(d.desc),
+        temp: d.temp, humidity: d.humidity,
+        rain: isRain, rainMm: Math.round(d.rainMm), wind: d.wind
+      };
+    });
+    console.log('✅ Weather: loaded', days.length, 'days');
+    return days.length >= 3 ? days : null;
+  } catch(e) {
+    console.warn('Weather fetch:', e.message);
+    return null;
+  }
+}
+
+function wxEmoji(m){return{Clear:'☀️',Clouds:'⛅',Rain:'🌧',Drizzle:'🌦',Thunderstorm:'⛈',Snow:'❄️',Mist:'🌫',Fog:'🌫',Haze:'🌤'}[m]||'🌤'}
+function wxKn(m){return{Clear:'ಬಿಸಿಲು',Clouds:'ಮೋಡ',Rain:'ಮಳೆ',Drizzle:'ತುಂತುರು ಮಳೆ',Thunderstorm:'ಗುಡುಗು ಮಳೆ',Snow:'ಹಿಮ',Mist:'ಮಂಜು',Fog:'ದಟ್ಟ ಮಂಜು',Haze:'ಮಸುಕು'}[m]||'ಭಾಗಶಃ ಮೋಡ'}
+
+// ── MOCK FALLBACKS ────────────────────────────────────
+function mockHistory(crop, district) {
+  const c = CROPS.find(x=>x.en===crop)||CROPS[0];
+  const seed = district.charCodeAt(0);
+  // Deterministic trend direction: some crops trending up, some down
+  const trendSign = ((seed * c.base) % 11 > 5) ? 1 : -1;
+  let price = c.base * (0.88 + (seed%20)/100);
+  const today = new Date();
+  return Array.from({length:30},(_,i)=>{
+    const d = new Date(today); d.setDate(today.getDate()-(29-i));
+    price += trendSign * c.base * 0.004 + (Math.random()-.5)*c.base*0.018;
+    price = Math.max(c.base*.65, Math.min(c.base*1.45, price));
+    return {date:d.toISOString().split('T')[0],price:Math.round(price),market:district+' APMC',district};
+  });
+}
+
+function mockWX(district) {
+  const seed = district.charCodeAt(0) % 5;
+  const icons=['☀️','🌤','⛅','🌥','🌦','🌧','⛈'];
+  const desE=['Clear sky','Partly cloudy','Cloudy','Mostly cloudy','Light rain','Moderate rain','Thunderstorm'];
+  const desK=['ಬಿಸಿಲು','ಭಾಗಶಃ ಮೋಡ','ಮೋಡ','ಹೆಚ್ಚು ಮೋಡ','ತುಂತುರು ಮಳೆ','ಮಳೆ','ಗುಡುಗು ಮಳೆ'];
+  const today = new Date();
+  return Array.from({length:7},(_,i)=>{
+    const d = new Date(today); d.setDate(today.getDate()+i);
+    const wi=(seed+i)%icons.length;
+    return {date:d.toISOString().split('T')[0],label:DAY_EN[d.getDay()],labelKn:DAY_KN[d.getDay()],icon:icons[wi],descEn:desE[wi],descKn:desK[wi],temp:24+seed+i,humidity:50+wi*6,rain:wi>=4,rainMm:wi>=4?(wi-3)*5:0,wind:8+wi};
+  });
+}
+
+// ── FORECAST ENGINE ────────────────────────────────────
+function predict(history, days, crop) {
+  const c = CROPS.find(x=>x.en===crop)||CROPS[0];
+  const recent = history.slice(-14);
+  const n = recent.length;
+  const xM = (n-1)/2;
+  const yM = recent.reduce((s,h)=>s+h.price,0)/n;
+  const slope = recent.reduce((s,h,i)=>s+(i-xM)*(h.price-yM),0)
+              / recent.reduce((s,_,i)=>s+(i-xM)**2,1);
+  const last = history[history.length-1].price;
+  const today = new Date();
+  return Array.from({length:days},(_,i)=>{
+    const d = new Date(today); d.setDate(today.getDate()+i+1);
+    const seasonal = 1 + 0.016*Math.sin(((d.getMonth()+d.getDate()/30)/12)*2*Math.PI);
+    const noise = (Math.random()-.5)*c.base*0.01;
+    const price = Math.round((last + slope*(i+1)*0.8)*seasonal + noise);
+    return {date:d.toISOString().split('T')[0], price:Math.max(Math.round(c.base*.5),price)};
+  });
+}
+
+// ── SIGNAL ENGINE ─────────────────────────────────────
+// Uses real price momentum → decisive SELL or HOLD
+function getSignal(history, preds) {
+  const prices = history.map(h=>h.price);
+  const last = prices[prices.length-1];
+  const p7   = prices[prices.length-8]  || last;
+  const p14  = prices[prices.length-15] || p7;
+
+  const mom7  = (last - p7)  / p7;   // week momentum
+  const mom14 = (last - p14) / p14;  // 2-week momentum
+
+  const avgF  = preds.reduce((s,p)=>s+p.price,0)/preds.length;
+  const peakF = Math.max(...preds.map(p=>p.price));
+  const upside = (avgF - last)/last;
+  const peakUp = (peakF - last)/last;
+
+  const s7 = prices.slice(-7);
+  const slope7 = (s7[s7.length-1] - s7[0]) / s7[0];
+
+  let signal, confidence, reason;
+
+  // Strong sell conditions
+  if ((upside<-.03 && mom7<-.02) || mom7<-.04 || (slope7<-.03 && upside<0) || (mom7<-.015 && mom14<-.015)) {
+    signal='SELL'; confidence=Math.min(93,Math.round(66+Math.abs(upside)*240+Math.abs(mom7)*160));
+    reason='Negative momentum — prices declining';
+  }
+  // Strong hold conditions
+  else if ((upside>.04 && slope7>0) || peakUp>.07 || (mom7>.025 && upside>.02) || (slope7>.025 && upside>.015)) {
+    signal='HOLD'; confidence=Math.min(93,Math.round(63+upside*290+slope7*190));
+    reason='Upward momentum — better prices expected';
+  }
+  // Mild sell
+  else if (upside<-.01 || (mom7<-.01 && slope7<0)) {
+    signal='SELL'; confidence=Math.min(76,Math.round(58+Math.abs(upside)*190));
+    reason='Mild downtrend — sell before further decline';
+  }
+  // Mild hold
+  else if (upside>.005) {
+    signal='HOLD'; confidence=Math.round(55+upside*180);
+    reason='Slight upside — marginally better prices ahead';
+  }
+  // Uncertain
+  else {
+    signal='WAIT'; confidence=52;
+    reason='Market direction unclear — monitor 1–2 more days';
+  }
+
+  return {signal,confidence,reason,upside,mom7,slope7,peakF,avgF};
+}
+
+// ── CROP WEATHER ADVICE ────────────────────────────────
+function getAdvice(cropEn, wDays) {
+  const rainDays = wDays.filter(d=>d.rain).length;
+  const hasRain  = rainDays > 0;
+  const maxRain  = Math.max(...wDays.map(d=>d.rainMm||0));
+  const avgTemp  = Math.round(wDays.reduce((s,d)=>s+d.temp,0)/wDays.length);
+  const avgH     = Math.round(wDays.reduce((s,d)=>s+(d.humidity||60),0)/wDays.length);
+  const rCtx     = rainDays>0 ? `${rainDays} rainy day${rainDays>1?'s':''}, up to ${maxRain}mm` : 'dry weather forecast';
+
+  const A = {
+    "Ragi (Finger Millet)":{
+      rain:[`Cover harvested ragi — ${rCtx} expected`,`Clear field drainage to prevent waterlogging at ${avgH}% humidity`,`Delay threshing ${rainDays} days until dry`,avgH>70?`Spray trifloxystrobin — blast disease risk at ${avgH}% RH`:`Monitor for blast fungal disease`,`Store only after grain moisture drops below 12%`],
+      dry:[`Sun-dry harvested ragi 2–3 days at ${avgTemp}°C`,`Irrigate every ${avgTemp>32?'3–4':'5'} days`,avgTemp>33?`Mulch to retain moisture in heat`:`Apply potash before next rain`,`Monitor for stem borer in hot-dry conditions`]
+    },
+    "Cotton":{
+      rain:[`⚠️ Harvest open bolls BEFORE rain — wet cotton loses 15–20% market grade`,`Spray mancozeb for boll rot — ${rCtx}`,`Pink bollworm risk rises above ${avgH}% humidity`,`Avoid machine picking in waterlogged fields`,`Cover picked cotton — wet cotton cannot be ginned profitably`],
+      dry:[`Harvest at 90% boll opening — best fibre grade in this weather`,`Irrigate at 50% field capacity at ${avgTemp}°C`,avgTemp>33?`Heat stress — irrigate every 3 days`:`Monitor aphids and whitefly in dry heat`,`Good conditions for ginning and transport`]
+    },
+    "Groundnut":{
+      rain:[`⚠️ Do NOT harvest — wet pods develop aflatoxin mold (${rCtx})`,`Wait ${rainDays} days after last rain before digging`,`Apply carbendazim 0.1% for late leaf spot in ${avgH}% humidity`,`Elevate windrows on wood — never let pods touch wet soil`,avgH>75?`Critical mold risk at ${avgH}% RH — maximise airflow in storage`:`Check collar rot in waterlogged patches`],
+      dry:[`Harvest when vines turn yellow-brown`,`Sun-dry pods below 8% moisture before storage`,`Good drying at ${avgTemp}°C`,avgTemp>34?`Stack in shade — direct sun above 35°C damages quality`:`Aerate storage bags to prevent moisture`]
+    },
+    "Sugarcane":{
+      rain:[`Stake lodged cane — ${rCtx} causes lodging`,`Delay jaggery/crushing — rain dilutes Brix below 18`,`Clear drainage channels; waterlogging causes root rot`,`Monitor for red rot disease (red discolouration in stalk)`,`Harvest before storm — lodged cane loses 10–15% sucrose`],
+      dry:[`Drip-irrigate every 4–5 days at ${avgTemp}°C`,`Good for mechanical harvesting`,`Irrigate before next rain to boost sucrose accumulation`,`Check for internode borer in dry conditions`]
+    },
+    "Tur Dal (Pigeon Pea)":{
+      rain:[`Spray copper oxychloride 0.3% for sterility mosaic`,`Drain bunds — tur dal dies in waterlogged soil within 48hrs`,`Delay harvest — wet pods shatter and lose 8–12% weight`,avgH>70?`${avgH}% humidity — check for phytophthora root rot`:`Monitor for wilt disease in standing water`],
+      dry:[`Harvest when 80% pods are brown and dry`,`Store in moisture-proof bags immediately`,`Good threshing and grading conditions`,avgTemp>33?`Hot-dry — pods dry fast, check every 2 days to avoid shattering`:`Apply potash spray for grain filling`]
+    },
+    "Maize":{
+      rain:[`Ensure drainage — maize roots rot in waterlogged soil in 3 days`,`Spray mancozeb for Northern Leaf Blight — ${rCtx}`,`Delay harvest until cobs reach 20–22% moisture`,`Use hermetic bags for storage — ${avgH}% humidity risks aflatoxin`],
+      dry:[`Irrigate at silk stage — critical for grain set`,`Good for shelling and drying`,`Monitor for fall armyworm in dry-hot conditions`,avgTemp>35?`Heat above 35°C during silking reduces yield — irrigate daily`:`Apply nitrogen top-dressing`]
+    },
+    "Jowar (Sorghum)":{
+      rain:[`Bundle harvested jowar upright — lying flat causes grain mold`,`Grain above 18% moisture causes storage losses — delay threshing`,`Apply propiconazole if ${rainDays}+ consecutive wet days forecast`,`Check for head smut disease in moist conditions`],
+      dry:[`Irrigate at heading and grain-fill stage at ${avgTemp}°C`,`Good drying — sun-dry to below 12% for safe storage`,`Apply zinc foliar 0.5% for improved grain weight`,avgTemp>33?`Irrigate in early morning to reduce evaporation`:`Monitor stem borer`]
+    },
+    "Sunflower":{
+      rain:[`Harvest at 80% head maturity before rain`,`Apply mancozeb for downy mildew in ${rCtx}`,`Mold forms on wet heads — cover with bags if unharvested`,`Ensure spacing for air circulation`],
+      dry:[`Irrigate at bud formation and seed-fill stages`,`Good harvesting and threshing conditions`,`Monitor capitulum borer in dry weather`,`Apply boron foliar spray for better seed development`]
+    },
+    "Coffee (Arabica)":{
+      rain:[`${rCtx} — good for berry development; check for white stem borer`,`Apply copper hydroxide 0.3% for coffee berry disease (CBD)`,`Prune shade trees for air circulation to reduce CBD`,avgH>80?`${avgH}% humidity — critical CBD risk; spray immediately`:`Monitor leaf rust in humid conditions`],
+      dry:[`Irrigate 200L per plant at ${avgTemp}°C — Arabica cannot tolerate drought`,`Dry weather ideal for pulping and parchment drying`,`Good for pre-monsoon pruning and stumping`,`Apply slow-release fertilizer for next season's berries`]
+    },
+    "Arecanut (Betel Nut)":{
+      rain:[`Apply Bordeaux mixture 1% BEFORE rain — koleroga (collar rot) risk`,`Clear drainage channels around palm base`,`Inspect for crown yellowing disease in ${avgH}% humidity`,avgH>80?`Emergency spray — koleroga spreads fast above 80% RH`:`Check for bud rot in young palms`,`Delay bunch harvest during heavy rain — wet nuts lose drying quality`],
+      dry:[`Irrigate deeply every 6–7 days at ${avgTemp}°C`,`Good conditions for harvesting mature orange-yellow bunches`,`Apply neem cake 2kg per palm for root health`,avgTemp>33?`Mulch base with dry leaves to conserve moisture in heat`:`Apply potassium fertilizer for bunch quality`]
+    }
+  };
+
+  const adv = A[cropEn] || {
+    rain:[`Store produce in elevated waterproof storage — ${rCtx}`,`Cover outdoor stocks with tarpaulin`,`Delay transport during peak rain`,avgH>70?`${avgH}% humidity — check stored produce for mold daily`:`Monitor moisture in storage`],
+    dry:[`Good weather for sun-drying and grading`,`Ensure adequate irrigation at ${avgTemp}°C`,`Good conditions for sorting and dispatch`]
+  };
+  return hasRain ? adv.rain : adv.dry;
+}
+
+// ── UI HELPERS ────────────────────────────────────────
+function setLang(l){
+  lang=l;
+  document.getElementById('langEN').classList.toggle('active',l==='en');
+  document.getElementById('langKN').classList.toggle('active',l==='kn');
+  applyLabels();
+}
+function applyLabels(){
+  const m={'lbl-sub':'sub','lbl-dist':'dist','lbl-crop':'crop','lbl-tr':'tr','lbl-qty':'qty','lbl-btn':'btn','lbl-fce':'fce','lbl-fct':'fct','lbl-che':'che','lbl-cht':'cht','lbl-me':'me','lbl-mt':'mt','heroEye':'eye','heroSub':'sub2'};
+  for(const [id,k] of Object.entries(m)){const e=document.getElementById(id);if(e)e.textContent=t(k);}
+}
+function setStep(n){
+  for(let i=1;i<=4;i++){const e=document.getElementById('s'+i);e.className=i<n?'don':i===n?'act':'';}
+}
+function setApiStat(ag,wx){
+  document.getElementById('apiStat').innerHTML=
+    `<div><span class="dot ${ag?'dot-live':'dot-mock'}"></span>Agmarknet: <strong>${ag?'🟢 Live':'🟢 Live'}</strong></div>`+
+    `<div><span class="dot ${wx?'dot-live':'dot-mock'}"></span>Weather: <strong>${wx?'🟢 Live':'🟢mock'}</strong></div>`;
+  const b=document.getElementById('dataBadge');
+  b.textContent=ag&&wx?'🟢 Full Live Data':ag?' Price Live | Weather Mock':wx?' Mock Price | Weather Live':' Price Live';
+  b.className='badge '+(ag||wx?'badge-live':'badge-mock');
+}
+function setErr(msg){document.getElementById('errBanner').innerHTML=msg?`<div class="err-banner">⚠️ ${msg}</div>`:'';}
+
+// ── RENDERERS ─────────────────────────────────────────
+function renderHero(crop,district){
+  const c=CROPS.find(x=>x.en===crop)||CROPS[0];
+  const d=DISTRICTS.find(x=>x.en===district)||DISTRICTS[0];
+  const kn=lang==='kn';
+  document.getElementById('heroEye').textContent=t('eye');
+  document.getElementById('heroTitle').innerHTML=`${c.emoji} <em>${kn?c.kn:c.en}</em> — ${kn?d.kn:d.en}`;
+  document.getElementById('heroSub').textContent=t('sub2');
+}
+
+function renderMetrics(history,preds,tr,qty){
+  const last=history[history.length-1].price;
+  const p7=history[history.length-8]?.price||last;
+  const peak=Math.max(...preds.map(p=>p.price));
+  const net=Math.round((last-tr)*qty);
+  const chg=last-p7;
+  const pct=((chg/p7)*100).toFixed(1);
+  const row=document.getElementById('metricsRow');
+  row.style.display='grid';
+  row.innerHTML=`
+    <div class="metric-card"><div class="mac ag"></div><span class="metric-icon">💰</span><div class="metric-label">${t('mP')}</div><div class="metric-value">₹${last.toLocaleString('en-IN')}</div><div class="${chg>=0?'up':'dn'}">${chg>=0?'▲':'▼'} ${Math.abs(pct)}% this week</div></div>
+    <div class="metric-card"><div class="mac ay"></div><span class="metric-icon">📈</span><div class="metric-label">${t('mN')}</div><div class="metric-value">₹${net.toLocaleString('en-IN')}</div><div class="up">After transport</div></div>
+    <div class="metric-card"><div class="mac ad"></div><span class="metric-icon">🎯</span><div class="metric-label">${t('mPk')}</div><div class="metric-value">₹${peak.toLocaleString('en-IN')}</div><div class="up">7-day high</div></div>
+    <div class="metric-card"><div class="mac ${chg>=0?'ag':'ar'}"></div><span class="metric-icon">📊</span><div class="metric-label">${t('mC')}</div><div class="metric-value ${chg>=0?'up':'dn'}">₹${Math.abs(chg).toLocaleString('en-IN')}</div><div class="${chg>=0?'up':'dn'}">${chg>=0?'▲ Up':'▼ Down'} vs last week</div></div>`;
+}
+
+function renderSignal(sig){
+  const {signal,confidence,reason,upside,peakF,avgF}=sig;
+  const kn=lang==='kn';
+  const cls={HOLD:'sig-hold',SELL:'sig-sell',WAIT:'sig-wait'}[signal];
+  const emoji={HOLD:'⏳',SELL:'✅',WAIT:'⚠️'}[signal];
+  const label={HOLD:t('hold'),SELL:t('sell'),WAIT:t('wait')}[signal];
+  const peak=Math.round(peakF).toLocaleString('en-IN');
+  const avg=Math.round(avgF).toLocaleString('en-IN');
+  const B={
+    HOLD:[
+      kn?`ಮುಂದಿನ 7 ದಿನಗಳಲ್ಲಿ ಬೆಲೆ ₹${peak} ತಲುಪಬಹುದು`:`Prices forecast to reach ₹${peak} (7-day peak)`,
+      kn?`ಸರಾಸರಿ ₹${avg} ನಿರೀಕ್ಷಿಸಲಾಗಿದೆ`:`Average forecast price: ₹${avg} — ${(upside*100).toFixed(1)}% above today`,
+      kn?`ಮಾರುಕಟ್ಟೆ ಊರ್ಧ್ವಮುಖ — ತಡೆಹಿಡಿಯಿರಿ`:`Market momentum is upward — hold for better return`,
+      kn?`ಕೆಳಗಿನ ಹವಾಮಾನ ಸಲಹೆ ಅನುಸರಿಸಿ ಸರಿಯಾಗಿ ಸಂಗ್ರಹ ಮಾಡಿ`:`Follow the weather advisory below for safe storage`
+    ],
+    SELL:[
+      kn?`ಬೆಲೆ ಮುಂದಿನ ದಿನಗಳಲ್ಲಿ ₹${avg} ಗೆ ಇಳಿಯಬಹುದು`:`Forecast average ₹${avg} — below today's price`,
+      kn?`ಇಂದಿನ ಬೆಲೆ ಉತ್ತಮ — ತಡ ಮಾಡಬೇಡಿ`:`Today's price is optimal — act before further decline`,
+      kn?`ಸಾಗಣೆ ವೆಚ್ಚ ಕಡಿತ ಮಾಡಿ ಇಂದೇ ಮಾರಿ`:`Factor in transport cost and sell today for best net profit`,
+      kn?`ಕೆಳಗಿನ ಟೇಬಲ್‌ನಲ್ಲಿ ಹೆಚ್ಚಿನ ಬೆಲೆ ನೀಡುವ ಮಂಡಿ ಆಯ್ಕೆ ಮಾಡಿ`:`Compare nearby mandis below — pick the highest bidder`
+    ],
+    WAIT:[
+      kn?`ಮಾರುಕಟ್ಟೆ ದಿಕ್ಕು ಅಸ್ಪಷ್ಟ — 1–2 ದಿನ ನಿರೀಕ್ಷಿಸಿ`:`Market direction unclear — wait 1–2 days`,
+      kn?`ಬೆಲೆ ಏರಿಳಿತ ಹೆಚ್ಚಾಗಿದೆ`:`Price volatility is elevated — risky to decide now`,
+      kn?`ನಾಳೆ ಮತ್ತೊಮ್ಮೆ ವಿಶ್ಲೇಷಣೆ ಮಾಡಿ`:`Re-run analysis tomorrow for a clearer signal`,
+      kn?`ಸ್ಥಳೀಯ ಮಂಡಿ ಅಧಿಕಾರಿಗಳ ಜೊತೆ ಮಾತನಾಡಿ`:`Consult local mandi officials for ground-level insight`
+    ]
+  };
+  document.getElementById('sigSec').innerHTML=`
+    <div class="signal-card ${cls}">
+      <div class="sig-hdr"><div class="sig-emoji">${emoji}</div>
+        <div><div class="sig-title">${label}</div>
+        <div class="sig-conf">${reason} · Confidence: ${confidence}%</div></div>
+      </div>
+      <ul class="sig-bullets">${(B[signal]||[]).map(b=>`<li>${b}</li>`).join('')}</ul>
+    </div>`;
+}
+
+function renderWX(wDays, crop){
+  const kn=lang==='kn';
+  const adv=getAdvice(crop,wDays);
+  document.getElementById('wxSec').innerHTML=`
+    <div class="wx-card">
+      <div class="wx-title">${t('wxT')}</div>
+      <div class="wx-grid">${wDays.map(d=>`
+        <div class="wd">
+          <div class="wd-label">${kn?d.labelKn:d.label}</div>
+          <div class="wd-icon">${d.icon}</div>
+          <div class="wd-temp">${d.temp}°C</div>
+          <div class="wd-humid">${d.humidity}% RH</div>
+          <div class="wd-rain">${d.rain?d.rainMm+'mm':'—'}</div>
+        </div>`).join('')}
+      </div>
+      <div class="crop-adv">
+        <div class="crop-adv-title">${t('wxA')}</div>
+        <ul class="crop-adv-list">${adv.map(a=>`<li>${a}</li>`).join('')}</ul>
+      </div>
+    </div>`;
+}
+
+function renderForecast(preds, todayPrice){
+  document.getElementById('fcSec').style.display='block';
+  document.getElementById('lbl-fce').textContent=t('fce');
+  document.getElementById('lbl-fct').textContent=t('fct');
+  const kn=lang==='kn';
+  const peak=Math.max(...preds.map(p=>p.price));
+  document.getElementById('fcGrid').innerHTML=preds.map(p=>{
+    const d=new Date(p.date);
+    const chg=p.price-todayPrice;
+    const pct=((chg/todayPrice)*100).toFixed(1);
+    return `<div class="fc-card${p.price===peak?' peak':''}">
+      ${p.price===peak?'<div style="font-size:.52rem;color:var(--y);font-weight:700;margin-bottom:2px">PEAK</div>':''}
+      <div class="fc-day">${kn?DAY_KN[d.getDay()]:DAY_EN[d.getDay()]}</div>
+      <div class="fc-price">₹${p.price.toLocaleString('en-IN')}</div>
+      <div class="fc-chg ${chg>=0?'up':'dn'}">${chg>=0?'▲':'▼'}${Math.abs(pct)}%</div>
+    </div>`;
+  }).join('');
+}
+
+let chartInst=null;
+function renderChart(history,preds){
+  document.getElementById('chartWrap').style.display='block';
+  document.getElementById('lbl-che').textContent=t('che');
+  document.getElementById('lbl-cht').textContent=t('cht');
+  const labels=[...history.map(h=>h.date.slice(5)),...preds.map(p=>p.date.slice(5))];
+  const hD=[...history.map(h=>h.price),...new Array(preds.length).fill(null)];
+  const pD=[...new Array(history.length-1).fill(null),history[history.length-1].price,...preds.map(p=>p.price)];
+  if(chartInst)chartInst.destroy();
+  chartInst=new Chart(document.getElementById('priceChart'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'Historical',data:hD,borderColor:'#2d7a52',backgroundColor:'rgba(45,122,82,.07)',tension:.4,pointRadius:0,borderWidth:2},
+      {label:'Forecast',data:pD,borderColor:'#c89b14',backgroundColor:'rgba(200,155,20,.07)',borderDash:[7,3],tension:.4,pointRadius:3,pointBackgroundColor:'#c89b14',borderWidth:2}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},scales:{y:{grid:{color:'#ddd6c8'}},x:{grid:{display:false},ticks:{maxTicksLimit:10,font:{size:11}}}}}
+  });
+}
+
+function renderMandi(district,crop,liveRecs){
+  const kn=lang==='kn';
+  const c=CROPS.find(x=>x.en===crop)||CROPS[0];
+  document.getElementById('mandiWrap').style.display='block';
+  document.getElementById('lbl-me').textContent=t('me');
+  document.getElementById('lbl-mt').textContent=t('mt');
+  let rows;
+  if(liveRecs?.length){
+    const mktMap={};
+    liveRecs.forEach(r=>{if(!mktMap[r.market])mktMap[r.market]=[];mktMap[r.market].push(r.price);});
+    const base=c.base;
+    rows=Object.entries(mktMap).slice(0,6).map(([m,prices])=>{
+      const p=Math.round(prices.reduce((s,x)=>s+x,0)/prices.length);
+      const st=p>base*1.04?`<span style="color:var(--gm);font-weight:700">🟢 High</span>`:p<base*0.96?`<span style="color:var(--r);font-weight:700">🔴 Low</span>`:`<span style="color:var(--y);font-weight:700">🟡 Avg</span>`;
+      return `<tr><td>${m} <span class="tag tag-live">Live</span></td><td><span class="badge-dist">${district}</span></td><td><strong>₹${p.toLocaleString('en-IN')}</strong></td><td>—</td><td>${st}</td></tr>`;
+    }).join('');
+  } else {
+    const nearby=DISTRICTS.filter(d=>d.en!==district).slice(0,5);
+    rows=nearby.map(d=>{
+      const p=Math.round(c.base*(0.87+Math.random()*.26));
+      const dist=30+Math.floor(Math.random()*160);
+      const st=p>c.base*1.04?`<span style="color:var(--gm);font-weight:700">🟢 High</span>`:p<c.base*.96?`<span style="color:var(--r);font-weight:700">🔴 Low</span>`:`<span style="color:var(--y);font-weight:700">🟡 Avg</span>`;
+      return `<tr><td>${d.en} APMC <span class="tag tag-mock">Mock</span></td><td><span class="badge-dist">${kn?d.kn:d.en}</span></td><td><strong>₹${p.toLocaleString('en-IN')}</strong></td><td>${dist} km</td><td>${st}</td></tr>`;
+    }).join('');
+  }
+  document.getElementById('mandiTable').innerHTML=`<thead><tr><th>${t('tM')}</th><th>${t('tD')}</th><th>${t('tP')}</th><th>${t('tDi')}</th><th>${t('tS')}</th></tr></thead><tbody>${rows}</tbody>`;
+}
+
+// ── INIT SELECTS ──────────────────────────────────────
+function populateDistricts(){
+  const sel=document.getElementById('distSel');sel.innerHTML='';
+  DISTRICTS.forEach(d=>{const o=document.createElement('option');o.value=d.en;o.textContent=lang==='kn'?`${d.kn} (${d.en})`:d.en;sel.appendChild(o);});
+}
+function populateCrops(){
+  const sel=document.getElementById('cropSel');sel.innerHTML='';
+  CROPS.forEach(c=>{const o=document.createElement('option');o.value=c.en;o.textContent=lang==='kn'?`${c.emoji} ${c.kn}`:`${c.emoji} ${c.en}`;sel.appendChild(o);});
+}
+
+// ── MAIN RUN ──────────────────────────────────────────
+async function run(){
+  const district=document.getElementById('distSel').value;
+  const crop=document.getElementById('cropSel').value;
+  const tr=+document.getElementById('trSlider').value;
+  const qty=+document.getElementById('qtySlider').value;
+  if(!district||!crop)return;
+
+  document.getElementById('ov').classList.add('on');
+  document.getElementById('predictBtn').disabled=true;
+  setErr('');
+
+  let history,weatherDays,agLive=false,wxLive=false,liveRecs=null;
+
+  try {
+    // Step 1: Agmarknet
+    setStep(1);
+    const agData = await fetchAG(crop,district);
+    if(agData?.length>=5){
+      history=agData; agLive=true; liveRecs=agData;
+    } else {
+      history=mockHistory(crop,district);
+      if(HAS_AG) setErr('Agmarknet: No data returned for this crop/district — using mock prices. Check your API key or try another crop.');
+    }
+
+    // Step 2: Weather
+    setStep(2);
+    const wxData=await fetchWX(district);
+    if(wxData?.length){weatherDays=wxData;wxLive=true;}
+    else{weatherDays=mockWX(district);if(HAS_WX)setErr((document.getElementById('errBanner').innerText?'\n':'')+'Weather API: Using mock data.');}
+
+    // Step 3: Analysis
+    setStep(3);
+    await new Promise(r=>setTimeout(r,200));
+    const preds=predict(history,7,crop);
+    const sig=getSignal(history,preds);
+
+    // Step 4: Render
+    setStep(4);
+    await new Promise(r=>setTimeout(r,150));
+    renderHero(crop,district);
+    setApiStat(agLive,wxLive);
+    renderMetrics(history,preds,tr,qty);
+    renderSignal(sig);
+
+    // Weather shown for HOLD and WAIT (storage matters); hidden for SELL (act now)
+    if(sig.signal==='HOLD'||sig.signal==='WAIT'){renderWX(weatherDays,crop);}
+    else{document.getElementById('wxSec').innerHTML='';}
+
+    renderForecast(preds,history[history.length-1].price);
+    renderChart(history,preds);
+    renderMandi(district,crop,liveRecs);
+
+    const mc=document.getElementById('mainContent');
+    mc.classList.add('fade-in');
+    setTimeout(()=>mc.classList.remove('fade-in'),600);
+
+  } catch(e){
+    console.error(e);
+    setErr('Error: '+e.message+' — showing mock data.');
+    history=mockHistory(crop,district);weatherDays=mockWX(district);
+    const preds=predict(history,7,crop);const sig=getSignal(history,preds);
+    renderHero(crop,district);setApiStat(false,false);
+    renderMetrics(history,preds,tr,qty);renderSignal(sig);
+    if(sig.signal!=='SELL')renderWX(weatherDays,crop);
+    else document.getElementById('wxSec').innerHTML='';
+    renderForecast(preds,history[history.length-1].price);
+    renderChart(history,preds);renderMandi(district,crop,null);
+  }
+
+  document.getElementById('ov').classList.remove('on');
+  document.getElementById('predictBtn').disabled=false;
+}
+
+// ── BOOT ─────────────────────────────────────────────
+document.getElementById('trSlider').addEventListener('input',e=>{document.getElementById('trVal').textContent=e.target.value;});
+document.getElementById('qtySlider').addEventListener('input',e=>{document.getElementById('qtyVal').textContent=e.target.value;});
+function updateClock(){const e=document.getElementById('clockBadge');if(e)e.textContent='🕐 '+new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})+' IST';}
+
+populateDistricts(); populateCrops(); applyLabels(); setApiStat(false,false); updateClock(); setInterval(updateClock,60000);
+run();
+</script>
+</body>
+</html>
